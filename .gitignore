@@ -2,4 +2,5 @@
 /.git/
 /app/css/
 /**/Thumbs.db
+/**/package-lock.json
 /**/.DS_Store
