@@ -9,10 +9,10 @@
   "author": "WebDesign-Master.ru",
   "license": "ISC",
   "devDependencies": {
-    "browser-sync": "^2.23.7",
+    "browser-sync": "^2.24.4",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^5.0.0",
-    "gulp-clean-css": "^3.9.3",
+    "gulp-clean-css": "^3.9.4",
     "gulp-concat": "^2.6.1",
     "gulp-notify": "^3.2.0",
     "gulp-rename": "^1.2.2",
