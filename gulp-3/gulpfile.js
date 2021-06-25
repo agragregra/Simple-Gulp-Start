@@ -1,6 +1,6 @@
 var gulp           = require('gulp'),
 		gutil          = require('gulp-util' ),
-		sass           = require('gulp-sass'),
+		sass           = require('gulp-sass')(require('sass')),
 		browserSync    = require('browser-sync'),
 		concat         = require('gulp-concat'),
 		uglify         = require('gulp-uglify'),
@@ -35,7 +35,7 @@ gulp.task('js', function() {
 
 gulp.task('sass', function() {
 	return gulp.src('app/sass/**/*.sass')
-	.pipe(sass({outputStyle: 'expand'}).on("error", notify.onError()))
+	.pipe(sass({outputStyle: 'expanded'}).on("error", notify.onError()))
 	.pipe(rename({suffix: '.min', prefix : ''}))
 	.pipe(autoprefixer(['last 15 versions']))
 	.pipe(cleanCSS()) // Опционально, закомментировать при отладке
