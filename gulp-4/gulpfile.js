@@ -4,11 +4,10 @@ const { src, dest, parallel, series, watch } = pkg
 import browserSync   from 'browser-sync'
 import gulpSass      from 'gulp-sass'
 import * as dartSass from 'sass'
-const  sassfn        = gulpSass(dartSass)
+const  sassModule    = gulpSass(dartSass)
 import postCss       from 'gulp-postcss'
 import cssnano       from 'cssnano'
 import concat        from 'gulp-concat'
-import rename        from 'gulp-rename'
 import uglify        from 'gulp-uglify'
 import autoprefixer  from 'autoprefixer'
 
@@ -27,22 +26,22 @@ function browsersync() {
 function js() {
 	return src([
 		'app/libs/jquery/dist/jquery.min.js',
-		'app/js/common.js', // Всегда в конце
+		'app/js/common.js', // Always at the end
 		])
 	.pipe(concat('scripts.min.js'))
-	.pipe(uglify()) // // Minify libs.js
+	.pipe(uglify()) // Mifify js (opt.)
 	.pipe(dest('app/js'))
 	.pipe(browserSync.stream())
 }
 
 function sass() {
-	return src(['app/sass/**/*.sass'])
-		.pipe(sassfn({ 'include css': true }))
+	return src('app/sass/**/*.sass')
+		.pipe(sassModule({ 'include css': true }))
 		.pipe(postCss([
 			autoprefixer({ grid: 'autoplace' }),
 			cssnano({ preset: ['default', { discardComments: { removeAll: true } }] })
 		]))
-		.pipe(rename({suffix: '.min', prefix : ''}))
+		.pipe(concat('main.min.css'))
 		.pipe(dest('app/css'))
 		.pipe(browserSync.stream())
 }
@@ -53,7 +52,7 @@ function startwatch() {
 	watch(['app/*.html'], { usePolling: true }).on('change', browserSync.reload)
 }
 
-export { js, sass }
-export let assets = series(js, sass)
+export { sass, js }
+export let assets = series(sass, js)
 
-export default series(js, sass, parallel(browsersync, startwatch))
+export default series(sass, js, parallel(browsersync, startwatch))
