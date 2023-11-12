@@ -1,56 +1,59 @@
-var gulp           = require('gulp'),
-		sass           = require('gulp-sass')(require('sass')),
-		browserSync    = require('browser-sync'),
-		concat         = require('gulp-concat'),
-		uglify         = require('gulp-uglify'),
-		cleanCSS       = require('gulp-clean-css'),
-		rename         = require('gulp-rename'),
-		autoprefixer   = require('gulp-autoprefixer'),
-		notify         = require("gulp-notify");
+import pkg from 'gulp'
+const { src, dest, parallel, series, watch } = pkg
 
-// Сервер и автообновление страницы Browsersync
-gulp.task('browser-sync', function() {
-	browserSync({
+import browserSync   from 'browser-sync'
+import gulpSass      from 'gulp-sass'
+import * as dartSass from 'sass'
+const  sassfn        = gulpSass(dartSass)
+import postCss       from 'gulp-postcss'
+import cssnano       from 'cssnano'
+import concat        from 'gulp-concat'
+import rename        from 'gulp-rename'
+import uglify        from 'gulp-uglify'
+import autoprefixer  from 'autoprefixer'
+
+function browsersync() {
+	browserSync.init({
 		server: {
-			baseDir: 'app'
+			baseDir: 'app/'
 		},
+		ghostMode: { clicks: false },
 		notify: false,
-		// tunnel: true,
-		// tunnel: "projectmane", //Demonstration page: http://projectmane.localtunnel.me
-	});
-});
+		online: true,
+		// tunnel: 'yousutename', // Attempt to use the URL https://yousutename.loca.lt
+	})
+}
 
-// Минификация пользовательских скриптов проекта и JS библиотек в один файл
-gulp.task('js', function() {
-	return gulp.src([
+function js() {
+	return src([
 		'app/libs/jquery/dist/jquery.min.js',
 		'app/js/common.js', // Всегда в конце
 		])
 	.pipe(concat('scripts.min.js'))
-	.pipe(uglify()) // Минимизировать весь js (на выбор)
-	.pipe(gulp.dest('app/js'))
-	.pipe(browserSync.reload({stream: true}));
-});
+	.pipe(uglify()) // // Minify libs.js
+	.pipe(dest('app/js'))
+	.pipe(browserSync.stream())
+}
 
-gulp.task('sass', function() {
-	return gulp.src('app/sass/**/*.sass')
-	.pipe(sass({outputStyle: 'expanded'}).on("error", notify.onError()))
-	.pipe(rename({suffix: '.min', prefix : ''}))
-	.pipe(autoprefixer(['last 15 versions']))
-	.pipe(cleanCSS()) // Опционально, закомментировать при отладке
-	.pipe(gulp.dest('app/css'))
-	.pipe(browserSync.reload({stream: true}));
-});
+function sass() {
+	return src(['app/sass/**/*.sass'])
+		.pipe(sassfn({ 'include css': true }))
+		.pipe(postCss([
+			autoprefixer({ grid: 'autoplace' }),
+			cssnano({ preset: ['default', { discardComments: { removeAll: true } }] })
+		]))
+		.pipe(rename({suffix: '.min', prefix : ''}))
+		.pipe(dest('app/css'))
+		.pipe(browserSync.stream())
+}
 
-gulp.task('code', function() {
-	return gulp.src('app/**/*.html')
-	.pipe(browserSync.reload({ stream: true }))
-});
+function startwatch() {
+	watch(['app/sass/**/*.sass'], { usePolling: true }, sass)
+	watch(['app/js/common.js', 'app/libs/**/*.js'], { usePolling: true }, js)
+	watch(['app/*.html'], { usePolling: true }).on('change', browserSync.reload)
+}
 
-gulp.task('watch', function() {
-	gulp.watch('app/sass/**/*.sass', gulp.parallel('sass'));
-	gulp.watch(['libs/**/*.js', 'app/js/common.js'], gulp.parallel('js'));
-	gulp.watch('app/*.html', gulp.parallel('code'));
-});
+export { js, sass }
+export let assets = series(js, sass)
 
-gulp.task('default', gulp.parallel('sass', 'js', 'browser-sync', 'watch'));
+export default series(js, sass, parallel(browsersync, startwatch))
